@@ -1,8 +1,8 @@
 [package]
 
-name = "sandbox"
+name = "snake_game"
 version = "0.1.0"
-authors = ["Sander"]
+authors = ["CyberSander"]
 
 [dependencies]
 piston = "0.52.0"
