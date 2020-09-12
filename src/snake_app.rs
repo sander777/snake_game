@@ -10,19 +10,19 @@ use food;
 use snake;
 
 pub struct Ctx {
-    pub field_size: (i32, i32),
+    pub field_size: (u32, u32),
     pub snake: Vec<(i32, i32)>,
-    pub food_pos: (i32, i32),
-    pub size: i32,
+    pub food_pos: Vec<(i32, i32)>,
+    pub size: u32,
 }
 
 pub struct SnakeApp {
     gl: GlGraphics,
     snake: snake::Snake,
-    food: food::Food,
+    food: Vec<food::Food>,
     ground: [f32; 4],
-    size: i32,
-    field_size: (i32, i32),
+    size: u32,
+    field_size: (u32, u32),
     delta: f64,
     state: i8,
     upd_dlt: f64,
@@ -35,9 +35,9 @@ impl SnakeApp {
             snake: snake::Snake::new(),
             ground: [0.1, 0.1, 0.1, 1.0],
             delta: 0.0,
-            food: food::Food::new(),
+            food: (0..1).map(|_| food::Food::new()).collect(),
             size: 50,
-            field_size: (0, 0),
+            field_size: (25, 25),
             state: 0,
             upd_dlt: 0.05,
         }
@@ -54,11 +54,30 @@ impl SnakeApp {
     }
 
     pub fn food_color(mut self, color: [f32; 4]) -> Self {
-        self.food.change_color(color);
+        for i in &mut self.food {
+            i.change_color(color);
+        }
         self
     }
 
-    pub fn change_size(mut self, size: i32) -> Self {
+    pub fn init_field(mut self, size: (u32, u32)) -> Self {
+        self.field_size = size;
+        self
+    }
+
+    pub fn food_count(mut self, n: usize) -> Self {
+        let mut new_food = Vec::<food::Food>::with_capacity(n);
+        for _ in 0..n {
+            let mut food = food::Food::new();
+            let mut ctx = self.ctx();
+            food.new_pos(&mut ctx);
+            new_food.push(food);
+        }
+        self.food = new_food;
+        self
+    }
+
+    pub fn change_size(mut self, size: u32) -> Self {
         self.size = size;
         self
     }
@@ -72,7 +91,7 @@ impl SnakeApp {
         Ctx {
             size: self.size,
             snake: self.snake.body_ref().clone(),
-            food_pos: self.food.pos,
+            food_pos: self.food.iter().map(|f| (f.get_pos())).collect(),
             field_size: self.field_size,
         }
     }
@@ -83,8 +102,8 @@ impl SnakeApp {
         let ground = self.ground;
 
         self.field_size = (
-            args.window_size[0] as i32 / self.ctx().size as i32,
-            args.window_size[1] as i32 / self.ctx().size as i32,
+            args.window_size[0] as u32 / self.ctx().size as u32,
+            args.window_size[1] as u32 / self.ctx().size as u32,
         );
 
         self.gl.draw(args.viewport(), |_c, gl| {
@@ -92,18 +111,22 @@ impl SnakeApp {
         });
         let mut ctx = self.ctx();
         self.snake.render(args, &mut self.gl, &mut ctx);
-        self.food.render(args, &mut self.gl, &ctx)
+        for i in &mut self.food {
+            i.render(args, &mut self.gl, &ctx)
+        }
     }
 
-    pub fn update(&mut self, upd_args: UpdateArgs, button: &mut Option<Button>) -> i8 {
+    pub fn update(&mut self, upd_args: UpdateArgs, button: &mut Option<Button>, score: &mut u32) -> i8 {
         self.delta += upd_args.dt;
+        *score = self.snake.body_ref().len() as u32;
         if self.state == 0 && self.delta > self.upd_dlt {
             self.delta = 0.0;
             let mut ctx = self.ctx();
             self.snake.update(upd_args, *button, &ctx);
-            if self.food.update(upd_args, &mut ctx) {
-                self.snake.grow();
-                println!("{}", self.snake.body_ref().len());
+            for i in &mut self.food {
+                if i.update(upd_args, &mut ctx) {
+                    self.snake.grow();
+                }
             }
             *button = None;
         }

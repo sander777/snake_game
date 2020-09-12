@@ -17,13 +17,13 @@ impl Food {
             color: [1.0, 1.0, 0.0, 1.0],
         }
     }
-    fn new_pos(self: &mut Self, ctx: &mut Ctx) {
+    pub fn new_pos(self: &mut Self, ctx: &mut Ctx) {
         loop {
             let mut rng = thread_rng();
             let x = rng.gen_range(0, ctx.field_size.0);
             let y = rng.gen_range(0, ctx.field_size.1);
-            if !ctx.snake.contains(&(x, y)) {
-                self.pos = (x, y);
+            if !ctx.snake.contains(&(x as i32, y as i32)) && !ctx.food_pos.contains(&(x as i32, y as i32)){
+                self.pos = (x as i32, y as i32);
                 break;
             }
         }
@@ -53,5 +53,9 @@ impl Food {
 
     pub fn change_color(self: &mut Self, color: [f32; 4]) {
         self.color = color;
+    }
+
+    pub fn get_pos(self: &Self) -> (i32, i32) {
+        self.pos.clone()
     }
 }

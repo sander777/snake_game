@@ -89,18 +89,26 @@ impl Snake {
 
         self.body[0].0 += vec.0;
         self.body[0].1 += vec.1;
-        self.body[0].0 %= ctx.field_size.0;
-        self.body[0].1 %= ctx.field_size.1;
+        self.body[0].0 %= ctx.field_size.0 as i32;
+        self.body[0].1 %= ctx.field_size.1 as i32;
         if self.body[0].0 < 0 {
-            self.body[0].0 += ctx.field_size.0
+            self.body[0].0 += ctx.field_size.0 as i32
         }
         if self.body[0].1 < 0 {
-            self.body[0].1 += ctx.field_size.1
+            self.body[0].1 += ctx.field_size.1 as i32
         }
     }
     pub fn is_alive(self: &mut Self) -> bool {
-        let set = self.body.iter().collect::<HashSet<_>>();
-        set.len() == self.body.len()
+        let l = self.body_ref().len();
+        for i in 0..l {
+            for j in 0..l {
+                if self.body[i] == self.body[j] && j != i {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     pub fn body_ref(self: &Self) -> &Vec<(i32, i32)> {
@@ -108,7 +116,7 @@ impl Snake {
     }
 
     pub fn grow(self: &mut Self) {
-        self.body.push((-1, -1));
+        self.body.push((-1 * self.body_ref().len() as i32, -1));
     }
 
     pub fn change_color(self: &mut Self, first_color: [f32; 4], second_color: [f32; 4]) {

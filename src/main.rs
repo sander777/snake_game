@@ -11,7 +11,7 @@ mod snake_app;
 use snake_app::*;
 
 const WINDOW_SIZE: [u32; 2] = [1000, 600];
-
+const SIZE: u32 = 20;
 fn main() {
     let opengl = OpenGL::V4_5;
     let mut window: GlutinWindow = WindowSettings::new("Snake", WINDOW_SIZE)
@@ -21,9 +21,11 @@ fn main() {
         .unwrap();
 
     let mut app = SnakeApp::new(opengl)
-        .change_size(50)
-        .food_color([1.0, 0.0, 1.0, 1.0])
-        .update_delta(0.05);
+        .change_size(SIZE)
+        .update_delta(0.03)
+        .init_field((WINDOW_SIZE[0] / SIZE, WINDOW_SIZE[1] / SIZE))
+        .food_count(10)
+        .food_color([1.0, 0.0, 1.0, 1.0]);
 
     let mut event = Events::new(EventSettings::new());
 
@@ -33,9 +35,11 @@ fn main() {
             app.render(args);
         }
         if let Some(args) = e.update_args() {
-            if app.update(args, &mut button) == -2 {
+            let mut score = 0;
+            if app.update(args, &mut button, &mut score) == -2 {
                 break;
             }
+            window.ctx.window().set_title(score.to_string().as_str());
         }
         if let Some(args) = e.press_args() {
             button = Some(args);
