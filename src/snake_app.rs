@@ -11,7 +11,7 @@ use snake;
 
 pub struct Ctx {
     pub field_size: (u32, u32),
-    pub snake: Vec<(i32, i32)>,
+    pub snake: Box<Vec<(i32, i32)>>,
     pub food_pos: Vec<(i32, i32)>,
     pub size: u32,
 }
@@ -90,7 +90,7 @@ impl SnakeApp {
     fn ctx(self: &mut Self) -> Ctx {
         Ctx {
             size: self.size,
-            snake: self.snake.body_ref().clone(),
+            snake: self.snake.body_ref(),
             food_pos: self.food.iter().map(|f| (f.get_pos())).collect(),
             field_size: self.field_size,
         }
@@ -116,7 +116,12 @@ impl SnakeApp {
         }
     }
 
-    pub fn update(&mut self, upd_args: UpdateArgs, button: &mut Option<Button>, score: &mut u32) -> i8 {
+    pub fn update(
+        &mut self,
+        upd_args: UpdateArgs,
+        button: &mut Option<Button>,
+        score: &mut u32,
+    ) -> i8 {
         self.delta += upd_args.dt;
         *score = self.snake.body_ref().len() as u32;
         if self.state == 0 && self.delta > self.upd_dlt {

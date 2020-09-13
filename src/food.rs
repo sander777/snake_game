@@ -18,14 +18,25 @@ impl Food {
         }
     }
     pub fn new_pos(self: &mut Self, ctx: &mut Ctx) {
-        loop {
-            let mut rng = thread_rng();
-            let x = rng.gen_range(0, ctx.field_size.0);
-            let y = rng.gen_range(0, ctx.field_size.1);
-            if !ctx.snake.contains(&(x as i32, y as i32)) && !ctx.food_pos.contains(&(x as i32, y as i32)){
-                self.pos = (x as i32, y as i32);
-                break;
+        if ctx.field_size.0 as i32 * ctx.field_size.1 as i32
+            - ctx.snake.len() as i32
+            - ctx.food_pos.len() as i32
+            + 1
+            > 0
+        {
+            loop {
+                let mut rng = thread_rng();
+                let x = rng.gen_range(0, ctx.field_size.0);
+                let y = rng.gen_range(0, ctx.field_size.1);
+                if !ctx.snake.contains(&(x as i32, y as i32))
+                    && !ctx.food_pos.contains(&(x as i32, y as i32))
+                {
+                    self.pos = (x as i32, y as i32);
+                    break;
+                }
             }
+        } else {
+            self.pos = (-1, -1);
         }
     }
 

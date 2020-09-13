@@ -1,8 +1,6 @@
 use opengl_graphics::GlGraphics;
 use piston::input::{Button, Key, RenderArgs, UpdateArgs};
 
-use std::collections::HashSet;
-
 use snake_app::Ctx;
 #[derive(Copy, Clone, PartialEq)]
 enum DIR {
@@ -25,7 +23,7 @@ pub struct Snake {
     first_color: [f32; 4],
     second_color: [f32; 4],
     dir: DIR,
-    body: Vec<(i32, i32)>,
+    body: Box<Vec<(i32, i32)>>,
 }
 
 impl Snake {
@@ -34,7 +32,7 @@ impl Snake {
             first_color: [0.0, 1.0, 1.0, 1.0],
             second_color: [1.0, 1.0, 0.0, 1.0],
             dir: DIR::RIGHT,
-            body: vec![(0, 0)],
+            body: Box::from(vec![(0, 0)]),
         }
     }
     pub fn render(self: &mut Self, args: RenderArgs, gl: &mut GlGraphics, ctx: &Ctx) {
@@ -42,7 +40,7 @@ impl Snake {
         gl.draw(args.viewport(), |c, gl| {
             let square = rectangle::square(0.0, 0.0, ctx.size as f64);
             let mut t = self.body.len() as f32;
-            for i in &self.body {
+            for i in &(*self.body) {
                 let color = trans_color(
                     self.first_color,
                     self.second_color,
@@ -59,11 +57,11 @@ impl Snake {
 
     pub fn update(self: &mut Self, _upd_args: UpdateArgs, button: Option<Button>, ctx: &Ctx) {
         for i in (1..self.body.len()).rev() {
-            self.body[i] = self.body[i - 1];
+            let temp = self.body[i - 1].clone();
+            self.body[i] = temp;
         }
         let mut new_dir: DIR = self.dir;
         match button {
-            None => {}
             Some(button) => match button {
                 Button::Keyboard(key) => {
                     new_dir = match key {
@@ -76,6 +74,7 @@ impl Snake {
                 }
                 _ => {}
             },
+            _ => {}
         }
         if !self.dir.is_opposite(&new_dir) {
             self.dir = new_dir
@@ -99,7 +98,7 @@ impl Snake {
         }
     }
     pub fn is_alive(self: &mut Self) -> bool {
-        let l = self.body_ref().len();
+        let l = self.body.len();
         for i in 0..l {
             for j in 0..l {
                 if self.body[i] == self.body[j] && j != i {
@@ -111,12 +110,13 @@ impl Snake {
         return true;
     }
 
-    pub fn body_ref(self: &Self) -> &Vec<(i32, i32)> {
-        &self.body
+    pub fn body_ref(self: &Self) -> Box<Vec<(i32, i32)>> {
+        Box::clone(&self.body)
     }
 
     pub fn grow(self: &mut Self) {
-        self.body.push((-1 * self.body_ref().len() as i32, -1));
+        let len = self.body.len() as i32;
+        self.body.push((-1 * len, -1));
     }
 
     pub fn change_color(self: &mut Self, first_color: [f32; 4], second_color: [f32; 4]) {
