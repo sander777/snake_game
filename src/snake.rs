@@ -111,7 +111,9 @@ impl Snake {
     }
 
     pub fn body_ref(self: &Self) -> Box<Vec<(i32, i32)>> {
-        Box::clone(&self.body)
+        let mut res = unsafe { Box::<Vec<(i32, i32)>>::new_zeroed().assume_init() };
+        res.clone_from(&self.body);
+        res
     }
 
     pub fn grow(self: &mut Self) {
