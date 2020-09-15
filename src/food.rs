@@ -24,17 +24,34 @@ impl Food {
             + 1
             > 0
         {
-            loop {
-                let mut rng = thread_rng();
-                let x = rng.gen_range(0, ctx.field_size.0);
-                let y = rng.gen_range(0, ctx.field_size.1);
-                if !ctx.snake.contains(&(x as i32, y as i32))
-                    && !ctx.food_pos.contains(&(x as i32, y as i32))
-                {
-                    self.pos = (x as i32, y as i32);
-                    break;
+            let mut field = Vec::<(i32, i32)>::new();
+            for y in 0..ctx.field_size.1 {
+                field.append(
+                    &mut (0..ctx.field_size.0)
+                        .map(|x| (x as i32, y as i32))
+                        .collect::<Vec<_>>(),
+                )
+            }
+            for i in ctx.snake.iter() {
+                let index = field.iter().position(|x| x == i);
+                match index {
+                    Some(index) => {
+                        field.remove(index);
+                    }
+                    None => {}
                 }
             }
+            for i in ctx.food_pos.iter() {
+                let index = field.iter().position(|x| x == i);
+                match index {
+                    Some(index) => {
+                        field.remove(index);
+                    }
+                    None => {}
+                }
+            }
+            let mut rng = thread_rng();
+            self.pos = field[rng.gen_range(0, field.len())];
         } else {
             self.pos = (-1, -1);
         }
