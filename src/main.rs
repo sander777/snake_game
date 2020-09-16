@@ -4,6 +4,7 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate rand;
+extern crate rodio;
 
 mod food;
 mod snake;
@@ -22,13 +23,14 @@ fn main() {
         .unwrap();
 
     'app: loop {
+        let size = window.ctx.window().get_inner_size().unwrap();
         let mut app = SnakeApp::new(opengl)
             .change_size(SIZE)
             .background_color([0.1, 0.1, 0.1, 1.0])
-            .update_delta(0.03)
+            .update_delta(0.06)
             .snake_color([0.0, 1.0, 0.5, 1.0], [0.0, 0.0, 1.0, 1.0])
-            .init_field((WINDOW_SIZE[0] / SIZE, WINDOW_SIZE[1] / SIZE))
-            .food_count(10)
+            .init_field((size.width as u32 / SIZE, size.height as u32 / SIZE))
+            .food_count(5)
             .food_color([1.0, 0.0, 1.0, 1.0]);
 
         let mut event = Events::new(EventSettings::new());

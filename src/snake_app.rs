@@ -5,6 +5,9 @@ pub use piston::input::{
     Button, Key, PressEvent, RenderArgs, RenderEvent, UpdateArgs, UpdateEvent,
 };
 pub use piston::window::WindowSettings;
+pub use rodio::{Decoder, Device, Source};
+pub use std::fs::File;
+pub use std::io::BufReader;
 
 use food;
 use snake;
@@ -26,10 +29,13 @@ pub struct SnakeApp {
     delta: f64,
     state: i8,
     upd_dlt: f64,
+    device: Device,
 }
 
 impl SnakeApp {
     pub fn new(opengl: OpenGL) -> SnakeApp {
+        let device = rodio::default_output_device().unwrap();
+
         SnakeApp {
             gl: GlGraphics::new(opengl),
             snake: snake::Snake::new(),
@@ -40,6 +46,7 @@ impl SnakeApp {
             field_size: (25, 25),
             state: 0,
             upd_dlt: 0.05,
+            device: device,
         }
     }
 
@@ -131,6 +138,11 @@ impl SnakeApp {
             for i in &mut self.food {
                 if i.update(upd_args, &mut ctx) {
                     self.snake.grow();
+                    let file = File::open("resources/EAT_Sound.wav").unwrap();
+                    let source = rodio::Decoder::new(BufReader::new(file))
+                        .unwrap()
+                        .convert_samples();
+                    rodio::play_raw(&self.device, source);
                 }
             }
             *button = None;
